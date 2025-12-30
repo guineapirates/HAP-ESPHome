@@ -117,7 +117,7 @@ class LightEntity : public HAPEntity {
     hap_acc_t *accessory = hap_acc_create(&acc_cfg);
     hap_serv_t *service = hap_serv_lightbulb_create(lightPtr->current_values.get_state());
 
-    hap_serv_add_char(service, hap_char_name_create(name.c_str()));
+    hap_serv_add_char(service, hap_char_name_create(strdup(name.c_str())));
 
     if (lightPtr->get_traits().supports_color_capability(light::ColorCapability::BRIGHTNESS))
       hap_serv_add_char(service, hap_char_brightness_create(lightPtr->current_values.get_brightness() * 100));
