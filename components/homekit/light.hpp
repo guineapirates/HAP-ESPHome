@@ -135,6 +135,19 @@ namespace esphome
       }
     public:
       LightEntity(light::LightState* lightPtr) : HAPEntity({{MODEL, "HAP-LIGHT"}}), lightPtr(lightPtr) {}
+      class HomeKitLightListener : public esphome::light::LightTargetStateReachedListener {
+ public:
+  explicit HomeKitLightListener(LightEntity *entity, esphome::light::LightState *light)
+      : entity_(entity), light_(light) {}
+
+  void on_target_state_reached() override {
+    entity_->on_light_update(light_);
+  }
+
+ private:
+  LightEntity *entity_;
+  esphome::light::LightState *light_;
+};
       void setup() {
         hap_acc_cfg_t acc_cfg = {
             .model = strdup(accessory_info[MODEL]),
@@ -190,7 +203,8 @@ namespace esphome
         /* Add the Accessory to the HomeKit Database */
         hap_add_bridged_accessory(accessory, hap_get_unique_aid(std::to_string(lightPtr->get_object_id_hash()).c_str()));
         if (!lightPtr->is_internal())
-          lightPtr->add_target_state_reached_listener([this]() {  LightEntity::on_light_update(lightPtr);});
+          auto *listener = new HomeKitLightListener(this, lightPtr);
+          lightPtr->add_target_state_reached_listener(listener);
 
         ESP_LOGI(TAG, "Light '%s' linked to HomeKit", accessory_name.c_str());
       }
